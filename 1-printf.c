@@ -1,52 +1,59 @@
-#include "main.h"
+#include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /**
- *_printf - prints and input into the standard output
- *@format: the format string
- *Return: number of bytes printed
+ * _putchar -writes a character to stdout
+ * @c: the character to write
+ *
+ * Return: on success 1. on error, -1 is returned, and errno is set appropriately.
  */
-
-int _printf(const char *format, ...)
-
+int _putchar(char c)
 {
-		int sum = 0;
-		va_list ap;
-		char *p, *start;
+	return (write(1, &c, 1));
+}
 
-		params_t params = PARAMS_INIT;
+/**
+ * _printf - produces output according to a format
+ * @format: format string containing zero or more directives
+ *
+ * Return: the number of characters printed (excluding the null byte used to end output to strings)
+ */
+int _printf(const char *format, ...)
+{
+	int chars_printed = 0;
+	va_list args;
 
-		va_start(ap, format);
+	va_start(args, format);
 
-		if (!format || (format[0] == '%' && !format[1]))/* checking for NULL char */
-			return (-1);
-		if (format[0] == '%' && format[1] == ' ' && !format[2])
-			return (-1);
-		for (p = (char *)format; *p; p++)
+	while (*format)
+	{
+		if (*format == '%')
 		{
-
-			init_params(&params, ap);
-			if (*p != '%')/*checking for the % specifier*/
+			format++; /* move past the '%' */
+			
+			switch (*format)
 			{
-				sum += _putchar(*p);
-				continue;
-			}
-			start = p;
-			p++;
-			while (get_flag(p, &params)) /* while char at p is flag character */
-			{
-				p++; /* next character */
-			}
-			p = get_width(p, &params, ap);
-			p = get_precision(p, &params, ap);
-			if (get_modifier(p, &params))
-				p++;
-			if (!get_specifier(p))
-				sum += print_from_to(start, p,
-						params.l_modifier || params.h_modifier ? p - 1 : 0);
-			else
-																	sum += get_print_func(p, ap, &params);
+				case 'c':
+					chars_printed += _putchar(va_arg(args, int));
+					break;
+				case 's':
+					chars_printed += write(1, va_arg(args, char *), strlen(va_arg(args, char *)));
+					break;
+				case '%':
+					chars_printed += _putchar('%');
+					break;
+				default:
+					chars_printed += _putchar('%');
+					chars_printed += _putchar(*format);
+			}			
 		}
-		_putchar(BUF_FLUSH);
-		va_end(ap);
-		return (sum);
+		else
+			chars_printed += _putchar(*format);
+
+		format++; /* move to next character */
+	}
+
+	va_end(args);
+	return (chars_printed);
 }
